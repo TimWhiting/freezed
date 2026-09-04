@@ -46,7 +46,12 @@ bool isDefaultConstructor(ConstructorElement constructor) {
 }
 
 String constructorNameToCallbackName(String constructorName) {
-  return constructorName.isEmpty ? '\$default' : constructorName;
+  if (constructorName.isEmpty) return '\$default';
+  // Callbacks are named parameters, and named parameters cannot start with an
+  // underscore. Private constructors are therefore prefixed with a `$`:
+  // `MyClass._default` -> `$_default`.
+  if (constructorName.startsWith('_')) return '\$$constructorName';
+  return constructorName;
 }
 
 String toJsonParameters(

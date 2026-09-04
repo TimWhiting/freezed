@@ -648,9 +648,20 @@ class Class {
 
     final copyWithEnabled =
         (configs.annotation.copyWith ?? globalConfigs.copyWith ?? true);
-    final copyWithTarget = (copyWithEnabled && constructors.length <= 1)
+    var copyWithTarget = (copyWithEnabled && constructors.length <= 1)
         ? declaration.copyWithTarget
         : null;
+
+    // `MyClass._()` is freezed's convention for attaching methods/getters to a
+    // union. When the class also declares a redirecting factory, the class
+    // itself is abstract, so `MyClass._()` cannot be used to build the result
+    // of copyWith. Fall back to delegating to the concrete subclass instead.
+    // See https://github.com/rrousselGit/freezed/issues/1371
+    if (copyWithTarget != null &&
+        constructors.isNotEmpty &&
+        copyWithTarget.constructorNamePart == '_') {
+      copyWithTarget = null;
+    }
 
     if (copyWithTarget != null) {
       // Check for missing required parameters on the copyWith target
